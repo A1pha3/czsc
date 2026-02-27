@@ -1,4 +1,4 @@
-# CZSC Source Code Reading Guide (Quick Reference)
+# CZSC Source Code Reading Guide
 
 > A comprehensive guide to understanding the CZSC (Chan Theory Technical Analysis) quantitative trading library
 
@@ -14,6 +14,7 @@ CZSC is a comprehensive Python library for quantitative trading based on Chan Th
 - ✅ Strategy backtesting and optimization
 - ✅ Multiple data source connectors
 - ✅ Rust/Python hybrid architecture for performance
+- ✅ Comprehensive analysis and visualization tools
 
 ## 📚 Reading Order
 
@@ -50,6 +51,16 @@ CZSC is a comprehensive Python library for quantitative trading based on Chan Th
 | `czsc/strategies.py` | Strategy templates |
 | `czsc/sensors/cta.py` | CTA research framework |
 | `czsc/traders/dummy.py` | Simple backtest |
+
+### Phase 5: Tools & Services (Optional)
+
+| File | Key Content |
+|------|-------------|
+| `czsc/utils/plotting/` | Visualization tools (refactored) |
+| `czsc/utils/analysis/` | Statistical analysis tools (new) |
+| `czsc/utils/ta.py` | Technical indicators |
+| `czsc/svc/backtest.py` | Backtest analysis |
+| `czsc/connectors/` | Data source connectors |
 
 ## 🔑 Core Concepts
 
@@ -131,7 +142,7 @@ from czsc.traders import CzscSignals
 
 # Define signal configuration
 signals_config = [
-    {'name': 'czsc.signals.tas_ma_base_V221101', 
+    {'name': 'czsc.signals.tas_ma_base_V221101',
      'freq': '日线', 'di': 1, 'ma_type': 'SMA', 'timeperiod': 5},
 ]
 
@@ -142,6 +153,52 @@ cs = CzscSignals(bg, signals_config=signals_config)
 print("Current signals:")
 for k, v in cs.s.items():
     print(f"  {k}: {v}")
+```
+
+### Example 4: Visualization (New Unified Interface)
+
+```python
+# Recommended: Use the new unified plotting interface
+from czsc.utils.plotting import (
+    plot_cumulative_returns,
+    plot_backtest_stats,
+    plot_monthly_heatmap,
+    KlineChart,
+)
+
+# Create K-line chart
+kc = KlineChart(n_rows=2)
+kc.add_kline(czsc_obj, name="K-line")
+kc.add_sma(czsc_obj, period=5, name="MA5")
+kc.add_volume(czsc_obj, row=2)
+kc.fig.show()
+
+# Plot backtest statistics
+fig = plot_backtest_stats(dret, ret_col='total')
+fig.show()
+```
+
+### Example 5: Statistical Analysis (New Module)
+
+```python
+# New analysis tools module
+from czsc.utils.analysis import (
+    daily_performance,
+    top_drawdowns,
+    cross_sectional_ic,
+    nmi_matrix,
+)
+
+# Calculate performance metrics
+stats = daily_performance(daily_returns)
+print(f"Annual Return: {stats['年化']:.2%}")
+print(f"Sharpe Ratio: {stats['夏普']:.2f}")
+print(f"Max Drawdown: {stats['最大回撤']:.2%}")
+
+# Calculate cross-sectional IC
+ic = cross_sectional_ic(factor_df, return_df)
+print(f"IC Mean: {ic.mean():.4f}")
+print(f"IC IR: {ic.mean()/ic.std():.4f}")
 ```
 
 ## 📖 Learning Path
@@ -185,18 +242,77 @@ czsc/
 ### Tools & Services (Optional)
 ```
 czsc/
-├── utils/                     # Utilities
+├── utils/
 │   ├── ta.py                  # Technical indicators
-│   └── plotting/backtest.py   # Backtest visualization
+│   ├── plotting/              # Visualization (refactored)
+│   │   ├── backtest.py        # Backtest charts
+│   │   ├── weight.py          # Weight analysis
+│   │   ├── kline.py           # K-line charts
+│   │   └── common.py          # Common utilities
+│   └── analysis/              # Statistical analysis (new)
+│       ├── stats.py           # Performance statistics
+│       ├── corr.py            # Correlation analysis
+│       └── events.py          # Event analysis
 ├── svc/                       # Services
 │   └── backtest.py            # Backtest analysis
 └── connectors/                # Data connectors
+```
+
+## 🎨 New Modules (v0.10.8+)
+
+### Visualization Tools (`utils/plotting/`)
+
+The plotting module has been refactored into a modular structure with a unified import interface:
+
+```python
+# Unified import (recommended)
+from czsc.utils.plotting import (
+    # Backtest plotting
+    plot_cumulative_returns,
+    plot_backtest_stats,
+    plot_monthly_heatmap,
+    plot_drawdown_analysis,
+    plot_daily_return_distribution,
+
+    # K-line charts
+    KlineChart,
+
+    # Constants
+    COLOR_DRAWDOWN,
+    COLOR_RETURN,
+)
+```
+
+### Analysis Tools (`utils/analysis/`)
+
+New statistical analysis module for comprehensive performance evaluation:
+
+```python
+from czsc.utils.analysis import (
+    # Performance statistics
+    daily_performance,
+    top_drawdowns,
+    rolling_daily_performance,
+    holds_performance,
+    psi,
+
+    # Correlation analysis
+    nmi_matrix,
+    single_linear,
+    cross_sectional_ic,
+
+    # Event analysis
+    overlap,
+)
 ```
 
 ## 🔗 Resources
 
 ### Documentation
 - [API Documentation](https://czsc.readthedocs.io/en/latest/modules.html)
+- [Quick Start Guide](快速开始指南.md) (Chinese)
+- [Source Code Guide](源码阅读指南.md) (Chinese)
+- [Core Tools Reference](项目核心工具.md) (Chinese)
 - [Feishu Wiki](https://s0cqcxuy3p.feishu.cn/wiki/wikcn3gB1MKl3ClpLnboHM1QgKf) (Chinese)
 - [Video Tutorials](https://space.bilibili.com/243682308/channel/series) (Chinese)
 
@@ -210,6 +326,7 @@ czsc/
 **Q: Python or Rust version?**
 - Beginners: Read Python version (`czsc/py/`)
 - Set `CZSC_USE_PYTHON=1` to force Python
+- Default: Rust version for better performance
 
 **Q: What is `di` parameter?**
 - `di`: Distance Index (倒数第几根K线)
@@ -220,6 +337,11 @@ czsc/
 - Core Chan Theory concept
 - Merges bars with inclusion relationship
 - See `remove_include` in `czsc/py/analyze.py`
+
+**Q: What's the difference between old and new plotting modules?**
+- Old: `czsc.utils.plotly_plot` (monolithic)
+- New: `czsc.utils.plotting` (modular, recommended)
+- Both work, but new module provides better organization
 
 ## 📊 Strategy Structure
 
@@ -236,10 +358,10 @@ class MyStrategy(CzscStrategyBase):
             "signals_any": ["signal3"],              # Satisfy any
             "signals_not": ["signal5"],              # Must not appear
         }]
-        
+
         # Define exit events
         exits = [...]
-        
+
         # Create position object
         pos = Position(
             name="Strategy Name",
@@ -260,11 +382,12 @@ class MyStrategy(CzscStrategyBase):
 3. ✅ **Day 4-6**: Core algorithms (`analyze.py`)
 4. ✅ **Week 2**: Signal system (`signals/`)
 5. ✅ **Week 3-4**: Trading framework (`traders/`, `strategies.py`)
+6. ✅ **Optional**: Visualization (`utils/plotting/`) and Analysis (`utils/analysis/`)
 
 **Remember**: Practice while learning! Run examples and modify code.
 
 ---
 
-**Version**: v1.0.0  
-**Last Updated**: 2024-02-16  
+**Version**: v1.1.0
+**Last Updated**: 2026-02-26
 **Maintainer**: CZSC Community
