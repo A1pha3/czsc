@@ -284,10 +284,11 @@ czsc_obj = CZSC(bars)
 bg = BarGenerator(base_freq='1分钟', freqs=['5分钟', '日线'])
 ```
 
-### 5.2 Python 独有功能
+### 5.2 始终使用 Python 实现的功能
 
 ```python
-# 以下功能仅在 Python 版本可用
+# 以下独立函数始终使用 Python 实现（无论是否安装 rs-czsc）
+# Rust CZSC 分析器内部已集成等价实现，但这些独立函数可用于自定义分析流程
 
 from czsc.core import (
     # 分析函数
