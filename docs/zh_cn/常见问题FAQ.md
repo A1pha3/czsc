@@ -2,16 +2,23 @@
 
 > 本文档收集了 CZSC 使用过程中的常见问题和解决方案
 
-## 目录
+> **版本兼容性**：本文档基于 CZSC v0.10.x 编写，需要 Python >= 3.10。
+> 遇到问题时，请先确认版本：`python -c "import czsc; print(czsc.__version__)"`
 
-- [安装与环境](#安装与环境)
-- [数据获取](#数据获取)
-- [信号计算](#信号计算)
-- [回测相关问题](#回测相关问题)
-- [性能相关](#性能相关)
-- [可视化相关](#可视化相关)
-- [缠论概念](#缠论概念)
-- [错误处理](#错误处理)
+## 🔍 问题快速定位
+
+遇到问题时，按以下顺序排查：
+
+```
+1. 安装失败？      → Q1-Q4
+2. 数据获取问题？  → Q5-Q7
+3. 信号计算异常？  → Q8-Q10
+4. 回测结果不对？  → Q11-Q14
+5. 性能太慢？      → Q15-Q17
+6. 图表/可视化？   → Q18-Q20
+7. 概念不理解？    → Q21-Q23
+8. 运行报错？      → Q24-Q27
+```
 
 ---
 
@@ -91,15 +98,12 @@ from czsc.utils import DataClient
 dc = DataClient(token="your_tushare_token")
 df = dc.get_kline(symbol="000001.SZ", freq="日线", sdt="20230101", edt="20231231")
 
-# 聚宽数据源（需要账户）
-from czsc.connectors.jq_connector import JqDataClient
-jq_dc = JqDataClient(username="your_username", password="your_password")
-df = jq_dc.get_kline(symbol="000001.XSHG", freq="1d")
+# 聚宽数据源（需要自行接入聚宽 SDK）
+# 详见《数据获取与处理指南》中的聚宽接入说明
 
-# CCXT 数字货币（免费）
-from czsc.connectors.ccxt_connector import CCXTConnector
-ccxt_dc = CCXTConnector(exchange="binance", symbol="BTC/USDT")
-df = ccxt_dc.get_kline(freq="1h", sdt="20240101", edt="20240131")
+# CCXT 数字货币（函数式 API）
+from czsc.connectors.ccxt_connector import get_symbols
+symbols = get_symbols(exchange="binance")  # 获取交易对列表
 ```
 
 ### Q6: 如何使用模拟数据？
@@ -371,13 +375,18 @@ kc = KlineChart(n_rows=2, height=600)
 # 添加K线
 kc.add_kline(czsc_obj, name="000001", row=1)
 
-# 添加笔
-kc.add_bi(czsc_obj, row=1)
+# 添加均线
+kc.add_sma(czsc_obj, period=5, row=1)
 
-# 添加成交量
-kc.add_volume(czsc_obj, row=2)
+# 添加成交量（注意方法名是 add_vol 不是 add_volume）
+kc.add_vol(czsc_obj, row=2)
 
 kc.fig.show()
+
+# 如需绘制完整的缠论分析图（含笔、分型、中枢标注），使用：
+from czsc import plot_czsc_chart
+fig = plot_czsc_chart(czsc_obj)
+fig.show()
 ```
 
 ### Q19: 如何导出图表？
@@ -560,8 +569,7 @@ empty_cache_path()
 
 ### Q28: 如何贡献代码？
 
-```python
-"""
+```text
 贡献流程：
 
 1. Fork 项目仓库
@@ -570,14 +578,24 @@ empty_cache_path()
 2. 创建功能分支
    git checkout -b feature/your-feature
 
-3. 编写代码和测试
-   - 遵循代码规范
-   - 添加单元测试
+3. 搭建开发环境
+   uv sync --extra dev
 
-4. 提交 Pull Request
-   - 描述变更内容
-   - 等待审查
-"""
+4. 编写代码和测试
+   - 遵循代码规范（行长度120字符，类型提示优先）
+   - 测试数据使用 czsc.mock.generate_symbol_kines
+   - 运行测试：uv run pytest test/ -v
+   - 代码检查：uv run flake8 czsc/ --max-line-length 120
+
+5. 提交 Pull Request
+   - 描述变更内容和动机
+   - 确保 CI 通过（Python 3.10-3.13 多版本测试）
+   - 等待审查和合并
+
+注意事项：
+- 信号函数使用版本化命名（如 V241013）
+- 所有公共函数必须有完整的 docstring
+- 参考 CLAUDE.md 获取完整开发规范
 ```
 
 ### Q29: 如何获取帮助？
