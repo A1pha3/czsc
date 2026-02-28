@@ -426,11 +426,12 @@ fig.update_layout(
    K1.high > K2.high < K3.high
 
         顶分型            底分型
-           /\              /\
-          /  \            /  \
-    K1   /    \ K3   K3  /    \ K1
-        /      \          /      \
-       K2      K        K2      K
+
+          K2                K1      K3
+         /  \              \      /
+    K1  /    \  K3          \    /
+       /      \              \  /
+                              K2
 """
 ```
 
